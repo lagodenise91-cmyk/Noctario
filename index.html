@@ -55,7 +55,7 @@
         async function cargarSueños() {
             const contenedor = document.getElementById('contenedor-sueños');
             try {
-                const respuesta = await fetch(csvURL);
+                const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
                 const data = await respuesta.text();
                 const filas = data.split(/\r?\n/).slice(1); 
                 contenedor.innerHTML = "";
@@ -73,44 +73,21 @@
         }
 
         function enviar() {
-    const texto = document.getElementById('input-sueño').value;
-    if(!texto) return;
+            const texto = document.getElementById('input-sueño').value;
+            if(!texto) return;
 
-    // 1. Creamos un túnel (iframe) para que Google no nos secuestre la página
-    let iframe = document.getElementById('rutasueños');
-    if(!iframe){
-        iframe = document.createElement('iframe');
-        iframe.id = 'rutasueños';
-        iframe.name = 'rutasueños';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-    }
+            // MÉTODO DEFINITIVO: LINK DIRECTO SIMULADO
+            const urlFinal = formURL + "?" + entryID + "=" + encodeURIComponent(texto);
+            
+            // Creamos un elemento invisible para "disparar" el link
+            const img = new Image();
+            img.src = urlFinal;
 
-    // 2. Creamos un formulario "de verdad"
-    const form = document.createElement('form');
-    form.action = formURL;
-    form.method = 'POST';
-    form.target = 'rutasueños'; // Esto hace que el envío pase por el túnel oculto
-
-    // 3. Agregamos el campo del sueño
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = entryID;
-    input.value = texto;
-
-    form.appendChild(input);
-    document.body.appendChild(form);
-
-    // 4. Lo mandamos
-    form.submit();
-
-    // 5. Limpieza y aviso
-    setTimeout(() => {
-        document.body.removeChild(form);
-        alert("el sueño ha sido entregado.");
-        document.getElementById('input-sueño').value = "";
-    }, 500);
-}
+            // Forzamos un aviso para saber que el botón respondió
+            console.log("Enviando a: " + urlFinal);
+            alert("el sueño ha sido entregado.");
+            document.getElementById('input-sueño').value = "";
+        }
 
         function filtrar() {
             let input = document.getElementById('buscador').value.toLowerCase();
