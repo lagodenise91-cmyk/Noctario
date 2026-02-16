@@ -1,108 +1,215 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Noctario - Archivo de Sueños</title>
+
     <style>
+
         body { background-color: white; color: black; font-family: 'Courier New', Courier, monospace; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
         #top-nav { position: absolute; top: 30px; right: 30px; font-size: 28px; cursor: pointer; user-select: none; z-index: 100; line-height: 1; }
+
         #escritura { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; transition: opacity 0.5s; }
+
         textarea { width: 80%; max-width: 500px; height: 120px; border: 1px solid black; padding: 20px; font-family: 'Courier New'; font-size: 16px; outline: none; resize: none; background: white; line-height: 1.5; }
+
         button { background: white; border: 1px solid black; padding: 8px 25px; margin-top: 20px; font-family: 'Courier New'; cursor: pointer; font-size: 14px; text-transform: lowercase; transition: 0.3s; }
+
         button:hover { background: black; color: white; }
+
         #biblioteca { display: none; padding: 100px 20px; overflow-y: auto; height: 100%; box-sizing: border-box; }
+
         #centro-biblioteca { max-width: 600px; margin: 0 auto; }
+
         #buscador { width: 100%; border: none; border-bottom: 1px solid black; font-family: 'Times New Roman', serif; font-size: 24px; outline: none; margin-bottom: 50px; background: transparent; padding-bottom: 5px; }
+
         .sueño { font-family: 'Times New Roman', serif; font-size: 19px; line-height: 1.6; margin-bottom: 40px; border-bottom: 1px dotted #ccc; padding-bottom: 20px; white-space: pre-wrap; }
+
         #contador { position: fixed; bottom: 15px; left: 15px; font-size: 10px; color: #999; letter-spacing: 2px; text-transform: uppercase; }
+
     </style>
+
 </head>
+
 <body>
+
+
 
     <div id="top-nav" onclick="toggleVista()">&#8942;</div>
 
+
+
     <div id="escritura">
+
         <textarea id="input-sueño" placeholder="escribí acá tu sueño..."></textarea>
+
         <button onclick="enviar()">enviar</button>
+
     </div>
 
+
+
     <div id="biblioteca">
+
         <div id="centro-biblioteca">
+
             <input type="text" id="buscador" placeholder="buscar palabra..." onkeyup="filtrar()">
+
             <div id="contenedor-sueños"><p>abriendo archivo...</p></div>
+
         </div>
+
     </div>
+
+
 
     <div id="contador">VISITAS: 000000034</div>
 
+
+
     <script>
-       // CONFIGURACIÓN FINAL (AHORA SÍ, CON EL LINK REAL)
-        const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?output=csv";
-        const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
-        const entryID = "entry.1116877069";
+
+      // CONFIGURACIÓN FINAL (ELIMINADO EL ERROR DEL ENTRY ID)
+
+const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?output=csv";
+
+const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
+
+const entryID = "entry.1630132338";
+
+
 
         function toggleVista() {
+
             const esc = document.getElementById('escritura');
+
             const bib = document.getElementById('biblioteca');
+
             const nav = document.getElementById('top-nav');
+
             if (bib.style.display === 'none' || bib.style.display === '') {
+
                 bib.style.display = 'block'; esc.style.display = 'none'; nav.innerText = '←'; cargarSueños();
+
             } else {
+
                 bib.style.display = 'none'; esc.style.display = 'flex'; nav.innerHTML = '&#8942;';
+
             }
+
         }
+
+
 
         async function cargarSueños() {
+
             const contenedor = document.getElementById('contenedor-sueños');
+
             try {
+
                 const respuesta = await fetch(csvURL);
+
                 const data = await respuesta.text();
+
                 const filas = data.split(/\r?\n/).slice(1); 
+
                 contenedor.innerHTML = "";
+
                 filas.reverse().forEach(fila => {
+
                     const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
                     const limpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
+
                     if (limpio && limpio.trim() !== "") {
+
                         const div = document.createElement('div');
+
                         div.className = 'sueño';
+
                         div.innerText = limpio;
+
                         contenedor.appendChild(div);
+
                     }
+
                 });
+
             } catch (error) { contenedor.innerHTML = "<p>no se pudo cargar el archivo.</p>"; }
+
         }
+
 function enviar() {
+
             const texto = document.getElementById('input-sueño').value;
+
             if(!texto) return;
 
+
+
             // Creamos un paquete de datos "limpio" para Google
+
             const datos = new URLSearchParams();
+
             datos.append(entryID, texto);
 
+
+
             fetch(formURL, {
+
                 method: 'POST',
+
                 mode: 'no-cors',
+
                 body: datos,
+
                 headers: {
+
                     'Content-Type': 'application/x-www-form-urlencoded'
+
                 }
+
             }).then(() => {
+
                 alert("el sueño ha sido entregado.");
+
                 document.getElementById('input-sueño').value = "";
+
             }).catch(err => {
+
                 alert("hubo un error al enviar.");
+
             });
+
         }
+
         
 
+
+
         function filtrar() {
+
             let input = document.getElementById('buscador').value.toLowerCase();
+
             let sueños = document.getElementsByClassName('sueño');
+
             for (let i = 0; i < sueños.length; i++) {
+
                 sueños[i].style.display = sueños[i].innerText.toLowerCase().includes(input) ? "block" : "none";
+
             }
+
         }
+
     </script>
+
 </body>
+
 </html>
