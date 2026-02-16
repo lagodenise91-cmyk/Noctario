@@ -37,10 +37,9 @@
     <div id="contador">VISITAS: 000000034</div>
 
     <script>
-     // CONFIGURACIÓN FINAL RE-VERIFICADA
-const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
-const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
-const entryID = "entry.1630132338";
+        const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
+        const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
+        const entryID = "entry.1630132338";
 
         function toggleVista() {
             const esc = document.getElementById('escritura');
@@ -72,22 +71,21 @@ const entryID = "entry.1630132338";
                 });
             } catch (error) { contenedor.innerHTML = "<p>no se pudo cargar el archivo.</p>"; }
         }
-function enviar() {
-    const texto = document.getElementById('input-sueño').value;
-    if(!texto) return;
 
-    // Construimos la URL EXACTA que te funcionó a mano
-    const urlFinal = formURL + "?" + entryID + "=" + encodeURIComponent(texto);
+        function enviar() {
+            const texto = document.getElementById('input-sueño').value;
+            if(!texto) return;
 
-    // Truco de la imagen: el navegador "llama" a la URL para pedir una imagen
-    // y Google recibe el dato en el camino.
-    const img = new Image();
-    img.src = urlFinal;
+            // Construimos la URL igual a la que probaste a mano
+            const urlFinal = formURL + "?" + entryID + "=" + encodeURIComponent(texto);
 
-    // Avisamos y limpiamos
-    alert("el sueño ha sido entregado.");
-    document.getElementById('input-sueño').value = "";
-}
+            // Enviamos el dato como si fuera una petición de imagen
+            const img = new Image();
+            img.src = urlFinal;
+
+            alert("el sueño ha sido entregado.");
+            document.getElementById('input-sueño').value = "";
+        }
 
         function filtrar() {
             let input = document.getElementById('buscador').value.toLowerCase();
