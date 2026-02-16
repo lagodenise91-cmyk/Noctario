@@ -37,9 +37,9 @@
     <div id="contador">VISITAS: 000000034</div>
 
     <script>
-        // CONFIGURACIÓN FINAL (CORREGIDA)
+       // CONFIGURACIÓN FINAL (CORREGIDA)
         const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?output=csv";
-        const formURL = "https://docs.google.com/forms/d/1KBWDmjWmmpKNOzuZ-ZLqHbFW5u5UXAuhQZA17YLrPBI/formResponse";
+        const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSd9t7F-i3X9Ym_LpLqR3tG3p8Y8z_K3n3hQ/formResponse";
         const entryID = "entry.1116877069";
 
         function toggleVista() {
@@ -72,17 +72,21 @@
                 });
             } catch (error) { contenedor.innerHTML = "<p>no se pudo cargar el archivo.</p>"; }
         }
-
-        function enviar() {
+function enviar() {
             const texto = document.getElementById('input-sueño').value;
             if(!texto) return;
 
-            // Formato de envío directo por URL
-            const urlFinal = `${formURL}?${entryID}=${encodeURIComponent(texto)}`;
+            // Creamos un paquete de datos "limpio" para Google
+            const datos = new URLSearchParams();
+            datos.append(entryID, texto);
 
-            fetch(urlFinal, {
+            fetch(formURL, {
                 method: 'POST',
-                mode: 'no-cors'
+                mode: 'no-cors',
+                body: datos,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
             }).then(() => {
                 alert("el sueño ha sido entregado.");
                 document.getElementById('input-sueño').value = "";
@@ -90,6 +94,7 @@
                 alert("hubo un error al enviar.");
             });
         }
+        
 
         function filtrar() {
             let input = document.getElementById('buscador').value.toLowerCase();
