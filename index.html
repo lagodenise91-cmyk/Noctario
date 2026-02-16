@@ -73,19 +73,44 @@
         }
 
         function enviar() {
-            const texto = document.getElementById('input-sueño').value;
-            if(!texto) return;
+    const texto = document.getElementById('input-sueño').value;
+    if(!texto) return;
 
-            // Construimos la URL igual a la que probaste a mano
-            const urlFinal = formURL + "?" + entryID + "=" + encodeURIComponent(texto);
+    // 1. Creamos un túnel (iframe) para que Google no nos secuestre la página
+    let iframe = document.getElementById('rutasueños');
+    if(!iframe){
+        iframe = document.createElement('iframe');
+        iframe.id = 'rutasueños';
+        iframe.name = 'rutasueños';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+    }
 
-            // Enviamos el dato como si fuera una petición de imagen
-            const img = new Image();
-            img.src = urlFinal;
+    // 2. Creamos un formulario "de verdad"
+    const form = document.createElement('form');
+    form.action = formURL;
+    form.method = 'POST';
+    form.target = 'rutasueños'; // Esto hace que el envío pase por el túnel oculto
 
-            alert("el sueño ha sido entregado.");
-            document.getElementById('input-sueño').value = "";
-        }
+    // 3. Agregamos el campo del sueño
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = entryID;
+    input.value = texto;
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+
+    // 4. Lo mandamos
+    form.submit();
+
+    // 5. Limpieza y aviso
+    setTimeout(() => {
+        document.body.removeChild(form);
+        alert("el sueño ha sido entregado.");
+        document.getElementById('input-sueño').value = "";
+    }, 500);
+}
 
         function filtrar() {
             let input = document.getElementById('buscador').value.toLowerCase();
