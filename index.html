@@ -37,9 +37,10 @@
     <div id="contador">VISITAS: 000000034</div>
 
     <script>
-        const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
+        // CONFIGURACIÓN ACTUALIZADA
+        const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
         const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
-        const entryID = "entry.1630132338";
+        const entryID = "entry.550106680"; // <--- ESTE ES EL ID REAL DE TU PREGUNTA
 
         function toggleVista() {
             const esc = document.getElementById('escritura');
@@ -76,17 +77,34 @@
             const texto = document.getElementById('input-sueño').value;
             if(!texto) return;
 
-            // MÉTODO DEFINITIVO: LINK DIRECTO SIMULADO
-            const urlFinal = formURL + "?" + entryID + "=" + encodeURIComponent(texto);
-            
-            // Creamos un elemento invisible para "disparar" el link
-            const img = new Image();
-            img.src = urlFinal;
+            // MÉTODO DE ENVÍO POR FORMULARIO OCULTO (MÁS ROBUSTO)
+            const iframe = document.createElement('iframe');
+            iframe.name = 'hidden_iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
 
-            // Forzamos un aviso para saber que el botón respondió
-            console.log("Enviando a: " + urlFinal);
+            const form = document.createElement('form');
+            form.action = formURL;
+            form.method = 'POST';
+            form.target = 'hidden_iframe';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = entryID;
+            input.value = texto;
+
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+
             alert("el sueño ha sido entregado.");
             document.getElementById('input-sueño').value = "";
+            
+            // Limpieza
+            setTimeout(() => {
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
+            }, 500);
         }
 
         function filtrar() {
