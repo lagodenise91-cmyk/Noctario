@@ -145,6 +145,13 @@ button:hover {
     letter-spacing: 2px;
     text-transform: uppercase;
 }
+
+#sin-resultados {
+    color: #ccc;
+    font-style: italic;
+    font-family: 'Times New Roman', serif;
+    margin-top: 20px;
+}
 </style>
 </head>
 
@@ -172,17 +179,17 @@ button:hover {
     </div>
 </div>
 
-<div id="contador">VISITAS: <span id="numero-visitas">000000000</span></div>
+<div id="contador">SUEÑOS REGISTRADOS: <span id="numero-visitas">000000000</span></div>
 
 <script>
 const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
 const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 const entryID = "entry.1116877069";
 
-// --- FUNCIONES DE NAVEGACIÓN ---
+// --- NAVEGACIÓN ---
 
 function entrar() {
-    actualizarContadorReal(); // Carga el número real al entrar
+    actualizarContadorReal(); 
     const inicio = document.getElementById('inicio');
     inicio.style.opacity = '0';
     setTimeout(() => {
@@ -207,38 +214,47 @@ function toggleVista() {
     }
 }
 
-// --- LÓGICA DEL CONTADOR ---
+// --- CONTADOR GLOBAL REAL ---
 
 async function actualizarContadorReal() {
     const display = document.getElementById('numero-visitas');
     try {
         const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.split(/\r?\n/).filter(line => line.trim() !== "");
+        // Filtramos para ignorar líneas vacías al final
+        const filas = data.trim().split('\n').filter(line => line.trim().length > 0);
         
-        // Cantidad de sueños (filas menos el encabezado)
-        let total = filas.length - 1;
+        // El total es: cantidad de filas menos el encabezado
+        let total = filas.length - 1; 
         if (total < 0) total = 0;
 
         display.innerText = total.toString().padStart(9, '0');
     } catch (error) {
-        console.error("Error contador:", error);
+        console.error("Error en contador:", error);
     }
 }
 
-// --- LÓGICA DE SUEÑOS ---
+// --- ARCHIVO DE SUEÑOS Y BUSCADOR ---
 
 async function cargarSueños() {
     const contenedor = document.getElementById('contenedor-sueños');
     try {
         const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.split(/\r?\n/).slice(1);
+        const filas = data.trim().split('\n').slice(1);
         contenedor.innerHTML = "";
 
+        if (filas.length === 0) {
+            contenedor.innerHTML = "<p>el archivo está vacío...</p>";
+            return;
+        }
+
         filas.reverse().forEach(fila => {
+            // Regex para separar por comas respetando comillas
             const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            const limpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
+            // Tomamos la columna [1] que es la respuesta del sueño
+            let limpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
+            
             if (limpio && limpio.trim() !== "") {
                 const div = document.createElement('div');
                 div.className = 'sueño';
@@ -247,9 +263,37 @@ async function cargarSueños() {
             }
         });
     } catch (error) {
-        contenedor.innerHTML = "<p>no se pudo cargar el archivo.</p>";
+        contenedor.innerHTML = "<p>no se pudo abrir el archivo.</p>";
     }
 }
+
+function filtrar() {
+    let input = document.getElementById('buscador').value.toLowerCase().trim();
+    let sueños = document.getElementsByClassName('sueño');
+    let encontrados = 0;
+
+    let previo = document.getElementById('sin-resultados');
+    if (previo) previo.remove();
+
+    for (let i = 0; i < sueños.length; i++) {
+        const contenido = sueños[i].innerText.toLowerCase();
+        if (contenido.includes(input)) {
+            sueños[i].style.display = "block";
+            encontrados++;
+        } else {
+            sueños[i].style.display = "none";
+        }
+    }
+
+    if (encontrados === 0 && input !== "") {
+        const mensaje = document.createElement('p');
+        mensaje.id = 'sin-resultados';
+        mensaje.innerText = 'no hay rastros de ese sueño...';
+        document.getElementById('contenedor-sueños').appendChild(mensaje);
+    }
+}
+
+// --- ENVÍO DE DATOS ---
 
 function enviar() {
     const texto = document.getElementById('input-sueño').value;
@@ -274,7 +318,6 @@ function enviar() {
     input.value = texto;
     form.appendChild(input);
 
-    // Parámetro extra para asegurar que Google lo tome
     const extra = document.createElement('input');
     extra.type = 'hidden';
     extra.name = 'partialResponse';
@@ -288,23 +331,15 @@ function enviar() {
         alert("el sueño ha sido entregado.");
         document.getElementById('input-sueño').value = "";
         
-        // Actualiza el contador 2 segundos después
+        // Forzamos actualización del contador 2 segundos después
         setTimeout(actualizarContadorReal, 2000); 
     } catch (e) {
-        console.error("Error al enviar", e);
+        console.error("Error envío", e);
     }
 
     setTimeout(() => {
         if (form.parentNode) document.body.removeChild(form);
-    }, 1000);
-}
-
-function filtrar() {
-    let input = document.getElementById('buscador').value.toLowerCase();
-    let sueños = document.getElementsByClassName('sueño');
-    for (let i = 0; i < sueños.length; i++) {
-        sueños[i].style.display = sueños[i].innerText.toLowerCase().includes(input) ? "block" : "none";
-    }
+    }, 1500);
 }
 </script>
 
