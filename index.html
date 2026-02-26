@@ -3,43 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Noctario — Archivo de sueños</title>
+<title>Noctario - Archivo de Sueños</title>
 
 <style>
 body {
-    background: white;
+    background-color: white;
     color: black;
-    font-family: "Courier New", monospace;
+    font-family: 'Courier New', Courier, monospace;
     margin: 0;
+    display: flex;
+    flex-direction: column;
     height: 100vh;
     overflow: hidden;
 }
 
-/* PANTALLA DE INICIO */
-
-#inicio {
-    display: flex;
-    height: 100vh;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    cursor: pointer;
-    line-height: 1.6;
-}
-
-/* APP ORIGINAL */
-
-#app {
-    display: none;
-}
-
 #top-nav {
     position: absolute;
-    top: 25px;
-    right: 25px;
-    font-size: 26px;
+    top: 30px;
+    right: 30px;
+    font-size: 28px;
     cursor: pointer;
     user-select: none;
+    z-index: 100;
+    line-height: 1;
 }
 
 #escritura {
@@ -48,28 +34,34 @@ body {
     align-items: center;
     justify-content: center;
     height: 100vh;
+    width: 100vw;
+    transition: opacity 0.5s;
 }
 
 textarea {
     width: 80%;
-    max-width: 520px;
-    height: 140px;
+    max-width: 500px;
+    height: 120px;
     border: 1px solid black;
-    padding: 15px;
-    font-family: "Courier New", monospace;
+    padding: 20px;
+    font-family: 'Courier New';
     font-size: 16px;
-    resize: none;
     outline: none;
+    resize: none;
     background: white;
+    line-height: 1.5;
 }
 
 button {
     background: white;
     border: 1px solid black;
-    padding: 8px 22px;
-    margin-top: 18px;
-    font-family: "Courier New", monospace;
+    padding: 8px 25px;
+    margin-top: 20px;
+    font-family: 'Courier New';
     cursor: pointer;
+    font-size: 14px;
+    text-transform: lowercase;
+    transition: 0.3s;
 }
 
 button:hover {
@@ -79,210 +71,184 @@ button:hover {
 
 #biblioteca {
     display: none;
-    height: 100%;
+    padding: 100px 20px;
     overflow-y: auto;
-    padding: 90px 20px;
+    height: 100%;
+    box-sizing: border-box;
 }
 
-#centro {
+#centro-biblioteca {
     max-width: 600px;
-    margin: auto;
+    margin: 0 auto;
 }
 
 #buscador {
     width: 100%;
     border: none;
     border-bottom: 1px solid black;
-    font-size: 22px;
-    margin-bottom: 40px;
+    font-family: 'Times New Roman', serif;
+    font-size: 24px;
     outline: none;
+    margin-bottom: 50px;
+    background: transparent;
+    padding-bottom: 5px;
 }
 
-.sueno {
-    margin-bottom: 35px;
+.sueño {
+    font-family: 'Times New Roman', serif;
+    font-size: 19px;
+    line-height: 1.6;
+    margin-bottom: 40px;
     border-bottom: 1px dotted #ccc;
-    padding-bottom: 18px;
+    padding-bottom: 20px;
     white-space: pre-wrap;
-    font-family: "Times New Roman", serif;
-    font-size: 18px;
 }
 
 #contador {
     position: fixed;
-    bottom: 12px;
-    left: 12px;
+    bottom: 15px;
+    left: 15px;
     font-size: 10px;
-    color: #888;
+    color: #999;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ✧ INICIO ✧ -->
-
-<div id="inicio" onclick="entrar()">
-    <div>
-        NOCTARIO<br>
-        archivo público de sueños<br><br>
-        click para entrar
-    </div>
-</div>
-
-<!-- ✧ APP ORIGINAL ✧ -->
-
-<div id="app">
-
 <div id="top-nav" onclick="toggleVista()">&#8942;</div>
 
 <div id="escritura">
-    <textarea id="sueno" placeholder="escribí acá tu sueño..."></textarea>
+    <textarea id="input-sueño" placeholder="escribí acá tu sueño..."></textarea>
     <button onclick="enviar()">enviar</button>
 </div>
 
 <div id="biblioteca">
-    <div id="centro">
-        <input id="buscador" placeholder="buscar palabra..." onkeyup="filtrar()">
-        <div id="contenedor">abriendo archivo...</div>
+    <div id="centro-biblioteca">
+        <input type="text" id="buscador" placeholder="buscar palabra..." onkeyup="filtrar()">
+        <div id="contenedor-sueños"><p>abriendo archivo...</p></div>
     </div>
 </div>
 
-<div id="contador">VISITAS: 000000001</div>
-
-</div>
+<div id="contador">VISITAS: 000000034</div>
 
 <script>
 
-// ====== CONFIGURACIÓN ======
+// CONFIGURACIÓN ACTUALIZADA
 
-const formURL =
-"https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
+const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
 
-const entryID = "entry.550106680";
+const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 
-const csvURL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
+const entryID = "entry.550106680"; // ESTE ES EL ID REAL DE TU PREGUNTA
 
-
-// ====== ENTRAR ======
-
-function entrar() {
-    document.getElementById("inicio").style.display = "none";
-    document.getElementById("app").style.display = "block";
-}
-
-
-// ====== CAMBIO DE VISTA ======
 
 function toggleVista() {
 
-    const esc = document.getElementById("escritura");
-    const bib = document.getElementById("biblioteca");
-    const nav = document.getElementById("top-nav");
+    const esc = document.getElementById('escritura');
+    const bib = document.getElementById('biblioteca');
+    const nav = document.getElementById('top-nav');
 
-    if (bib.style.display === "none" || bib.style.display === "") {
-        bib.style.display = "block";
-        esc.style.display = "none";
-        nav.innerText = "←";
-        cargar();
+    if (bib.style.display === 'none' || bib.style.display === '') {
+        bib.style.display = 'block';
+        esc.style.display = 'none';
+        nav.innerText = '←';
+        cargarSueños();
     } else {
-        bib.style.display = "none";
-        esc.style.display = "flex";
-        nav.innerHTML = "&#8942;";
+        bib.style.display = 'none';
+        esc.style.display = 'flex';
+        nav.innerHTML = '&#8942;';
     }
 }
 
 
-// ====== ENVIAR SUEÑO ======
+async function cargarSueños() {
+
+    const contenedor = document.getElementById('contenedor-sueños');
+
+    try {
+        const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
+        const data = await respuesta.text();
+
+        const filas = data.split(/\r?\n/).slice(1);
+
+        contenedor.innerHTML = "";
+
+        filas.reverse().forEach(fila => {
+
+            const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+            const limpio = columnas[1]
+                ?.replace(/^"|"$/g, "")
+                .replace(/""/g, '"');
+
+            if (limpio && limpio.trim() !== "") {
+
+                const div = document.createElement('div');
+                div.className = 'sueño';
+                div.innerText = limpio;
+
+                contenedor.appendChild(div);
+            }
+        });
+
+    } catch (error) {
+        contenedor.innerHTML = "<p>no se pudo cargar el archivo.</p>";
+    }
+}
+
 
 function enviar() {
 
-    const texto = document.getElementById("sueno").value.trim();
-
+    const texto = document.getElementById('input-sueño').value;
     if (!texto) return;
 
-    const iframe = document.createElement("iframe");
-    iframe.name = "hidden_iframe";
-    iframe.style.display = "none";
+    // ENVÍO POR FORMULARIO OCULTO
+
+    const iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.style.display = 'none';
     document.body.appendChild(iframe);
 
-    const form = document.createElement("form");
+    const form = document.createElement('form');
     form.action = formURL;
-    form.method = "POST";
-    form.target = "hidden_iframe";
+    form.method = 'POST';
+    form.target = 'hidden_iframe';
 
-    const input = document.createElement("textarea");
+    const input = document.createElement('input');
+    input.type = 'hidden';
     input.name = entryID;
     input.value = texto;
-    form.appendChild(input);
 
+    form.appendChild(input);
     document.body.appendChild(form);
 
     form.submit();
 
-    alert("sueño enviado ✧");
+    alert("el sueño ha sido entregado.");
+    document.getElementById('input-sueño').value = "";
 
-    document.getElementById("sueno").value = "";
-
+    // Limpieza
     setTimeout(() => {
         document.body.removeChild(form);
         document.body.removeChild(iframe);
-    }, 1000);
+    }, 500);
 }
 
-
-// ====== CARGAR ARCHIVO ======
-
-async function cargar() {
-
-    const cont = document.getElementById("contenedor");
-
-    try {
-
-        const r = await fetch(csvURL + "&t=" + Date.now());
-        const txt = await r.text();
-
-        const filas = txt.split("\n").slice(1);
-
-        cont.innerHTML = "";
-
-        filas.reverse().forEach(f => {
-
-            const col = f.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            const texto = col[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
-
-            if (texto && texto.trim()) {
-
-                const div = document.createElement("div");
-                div.className = "sueno";
-                div.textContent = texto;
-
-                cont.appendChild(div);
-            }
-        });
-
-    } catch {
-        cont.textContent = "no se pudo cargar";
-    }
-}
-
-
-// ====== BUSCADOR ======
 
 function filtrar() {
 
-    const palabra =
-    document.getElementById("buscador").value.toLowerCase();
+    let input = document.getElementById('buscador').value.toLowerCase();
+    let sueños = document.getElementsByClassName('sueño');
 
-    const suenos =
-    document.getElementsByClassName("sueno");
+    for (let i = 0; i < sueños.length; i++) {
 
-    for (let s of suenos) {
-
-        s.style.display =
-        s.textContent.toLowerCase().includes(palabra)
-        ? "block"
-        : "none";
+        sueños[i].style.display =
+            sueños[i].innerText.toLowerCase().includes(input)
+            ? "block"
+            : "none";
     }
 }
 
