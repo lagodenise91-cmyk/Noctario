@@ -134,6 +134,7 @@ button:hover {
     border-bottom: 1px dotted #ccc;
     padding-bottom: 20px;
     white-space: pre-wrap;
+    display: none; /* Se activan con la búsqueda */
 }
 
 #contador {
@@ -146,8 +147,9 @@ button:hover {
     text-transform: uppercase;
 }
 
-#sin-resultados {
-    color: #ccc;
+/* --- ESTILO DE LOS MENSAJES DE ESTADO --- */
+#sin-resultados, #instruccion-busqueda {
+    color: #ccc; /* Gris clarito */
     font-style: italic;
     font-family: 'Times New Roman', serif;
     margin-top: 20px;
@@ -175,14 +177,15 @@ button:hover {
 <div id="biblioteca">
     <div id="centro-biblioteca">
         <input type="text" id="buscador" placeholder="buscar palabra..." onkeyup="filtrar()">
-        <div id="contenedor-sueños"><p>abriendo archivo...</p></div>
+        <div id="contenedor-sueños">
+            <p id="instruccion-busqueda">el archivo está cerrado. busca una palabra para abrirlo...</p>
+        </div>
     </div>
 </div>
 
 <div id="contador">SUEÑOS REGISTRADOS: <span id="numero-visitas">000000000</span></div>
 
 <script>
-// ACTUALIZADO CON TU NUEVO LINK DE PUBLICACIÓN EN FORMATO CSV
 const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
 const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 const entryID = "entry.1116877069";
@@ -210,6 +213,7 @@ function toggleVista() {
         bib.style.display = 'none';
         esc.style.display = 'flex';
         nav.innerHTML = '&#8942;';
+        document.getElementById('buscador').value = "";
     }
 }
 
@@ -218,8 +222,7 @@ async function actualizarContadorReal() {
     try {
         const respuesta = await fetch(csvURL + "&cache=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.split(/\r?\n/).filter(line => line.trim() !== "");
-        
+        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 2);
         let total = filas.length - 1; 
         if (total < 0) total = 0;
         display.innerText = total.toString().padStart(9, '0');
@@ -233,14 +236,10 @@ async function cargarSueños() {
     try {
         const respuesta = await fetch(csvURL + "&cache=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.split(/\r?\n/).filter(line => line.trim() !== "").slice(1);
+        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 2).slice(1);
         
-        contenedor.innerHTML = "";
-        if (filas.length === 0) {
-            contenedor.innerHTML = "<p>el archivo está vacío...</p>";
-            return;
-        }
-
+        contenedor.innerHTML = '<p id="instruccion-busqueda">el archivo está cerrado. busca una palabra para abrirlo...</p>';
+        
         filas.reverse().forEach(fila => {
             const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             let sueñoLimpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
@@ -260,10 +259,19 @@ async function cargarSueños() {
 function filtrar() {
     let input = document.getElementById('buscador').value.toLowerCase().trim();
     let sueños = document.getElementsByClassName('sueño');
+    let instruccion = document.getElementById('instruccion-busqueda');
     let encontrados = 0;
 
     let previo = document.getElementById('sin-resultados');
     if (previo) previo.remove();
+
+    if (input === "") {
+        if (instruccion) instruccion.style.display = "block";
+        for (let s of sueños) s.style.display = "none";
+        return;
+    }
+
+    if (instruccion) instruccion.style.display = "none";
 
     for (let s of sueños) {
         if (s.innerText.toLowerCase().includes(input)) {
@@ -274,10 +282,10 @@ function filtrar() {
         }
     }
 
-    if (encontrados === 0 && input !== "") {
+    if (encontrados === 0) {
         const p = document.createElement('p');
         p.id = 'sin-resultados';
-        p.innerText = 'no hay rastros de ese sueño...';
+        p.innerText = 'no hay registro aún';
         document.getElementById('contenedor-sueños').appendChild(p);
     }
 }
