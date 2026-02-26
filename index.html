@@ -172,14 +172,17 @@ button:hover {
     </div>
 </div>
 
-<div id="contador">VISITAS: 000000024</div>
+<div id="contador">VISITAS: <span id="numero-visitas">000000000</span></div>
 
 <script>
 const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
 const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 const entryID = "entry.1116877069";
 
+// --- FUNCIONES DE NAVEGACIÓN ---
+
 function entrar() {
+    actualizarContadorReal(); // Carga el número real al entrar
     const inicio = document.getElementById('inicio');
     inicio.style.opacity = '0';
     setTimeout(() => {
@@ -203,6 +206,27 @@ function toggleVista() {
         nav.innerHTML = '&#8942;';
     }
 }
+
+// --- LÓGICA DEL CONTADOR ---
+
+async function actualizarContadorReal() {
+    const display = document.getElementById('numero-visitas');
+    try {
+        const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
+        const data = await respuesta.text();
+        const filas = data.split(/\r?\n/).filter(line => line.trim() !== "");
+        
+        // Cantidad de sueños (filas menos el encabezado)
+        let total = filas.length - 1;
+        if (total < 0) total = 0;
+
+        display.innerText = total.toString().padStart(9, '0');
+    } catch (error) {
+        console.error("Error contador:", error);
+    }
+}
+
+// --- LÓGICA DE SUEÑOS ---
 
 async function cargarSueños() {
     const contenedor = document.getElementById('contenedor-sueños');
@@ -231,7 +255,6 @@ function enviar() {
     const texto = document.getElementById('input-sueño').value;
     if (!texto.trim()) return;
 
-    // 1. Crear iframe si no existe
     let iframe = document.getElementsByName('hidden_iframe')[0];
     if (!iframe) {
         iframe = document.createElement('iframe');
@@ -240,38 +263,37 @@ function enviar() {
         document.body.appendChild(iframe);
     }
 
-    // 2. Crear el formulario
     const form = document.createElement('form');
     form.action = formURL;
     form.method = 'POST';
     form.target = 'hidden_iframe';
 
-    // 3. Campo del sueño
     const input = document.createElement('input');
     input.type = 'hidden';
     input.name = entryID;
     input.value = texto;
     form.appendChild(input);
 
-    // 4. Parámetro de envío (Cambiamos la forma de agregarlo para no romper form.submit)
+    // Parámetro extra para asegurar que Google lo tome
     const extra = document.createElement('input');
     extra.type = 'hidden';
-    extra.name = 'partialResponse'; // Google acepta esto también
+    extra.name = 'partialResponse';
     extra.value = '[null,null,null]';
     form.appendChild(extra);
 
     document.body.appendChild(form);
 
-    // 5. Intento de envío
     try {
         form.submit();
         alert("el sueño ha sido entregado.");
         document.getElementById('input-sueño').value = "";
+        
+        // Actualiza el contador 2 segundos después
+        setTimeout(actualizarContadorReal, 2000); 
     } catch (e) {
         console.error("Error al enviar", e);
     }
 
-    // 6. Limpieza
     setTimeout(() => {
         if (form.parentNode) document.body.removeChild(form);
     }, 1000);
