@@ -221,11 +221,11 @@ async function actualizarContadorReal() {
     try {
         const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
         const data = await respuesta.text();
-        // Filtramos para ignorar líneas vacías al final
-        const filas = data.trim().split('\n').filter(line => line.trim().length > 0);
         
-        // El total es: cantidad de filas menos el encabezado
-        let total = filas.length - 1; 
+        // Separación robusta de líneas para Google Sheets
+        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 0);
+        
+        let total = filas.length - 1; // Descontamos encabezado
         if (total < 0) total = 0;
 
         display.innerText = total.toString().padStart(9, '0');
@@ -238,21 +238,24 @@ async function actualizarContadorReal() {
 
 async function cargarSueños() {
     const contenedor = document.getElementById('contenedor-sueños');
+    contenedor.innerHTML = "<p>abriendo archivo...</p>";
+    
     try {
         const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.trim().split('\n').slice(1);
-        contenedor.innerHTML = "";
+        
+        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 0);
+        const datosCuerpo = filas.slice(1);
 
-        if (filas.length === 0) {
+        if (datosCuerpo.length === 0) {
             contenedor.innerHTML = "<p>el archivo está vacío...</p>";
             return;
         }
 
-        filas.reverse().forEach(fila => {
-            // Regex para separar por comas respetando comillas
+        contenedor.innerHTML = "";
+        datosCuerpo.reverse().forEach(fila => {
+            // Regex para separar por comas respetando el texto entre comillas
             const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            // Tomamos la columna [1] que es la respuesta del sueño
             let limpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
             
             if (limpio && limpio.trim() !== "") {
@@ -331,8 +334,8 @@ function enviar() {
         alert("el sueño ha sido entregado.");
         document.getElementById('input-sueño').value = "";
         
-        // Forzamos actualización del contador 2 segundos después
-        setTimeout(actualizarContadorReal, 2000); 
+        // Actualizamos contador tras el envío (con delay para caché de Google)
+        setTimeout(actualizarContadorReal, 3000); 
     } catch (e) {
         console.error("Error envío", e);
     }
