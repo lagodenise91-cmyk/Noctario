@@ -134,7 +134,7 @@ button:hover {
     border-bottom: 1px dotted #ccc;
     padding-bottom: 20px;
     white-space: pre-wrap;
-    display: none; /* Ocultos hasta buscar */
+    display: none; 
 }
 
 #contador {
@@ -219,8 +219,9 @@ async function actualizarContadorReal() {
     try {
         const respuesta = await fetch(csvURL + "&cache=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 2);
-        let total = filas.length - 1; 
+        // Contamos filas parseando correctamente
+        const registros = parsearTodoElCSV(data);
+        let total = registros.length - 1; 
         if (total < 0) total = 0;
         display.innerText = total.toString().padStart(9, '0');
     } catch (error) {
@@ -228,21 +229,56 @@ async function actualizarContadorReal() {
     }
 }
 
+// Lógica avanzada para ignorar comas y saltos de línea dentro de sueños
+function parsearTodoElCSV(texto) {
+    const filas = [];
+    let filaActual = [];
+    let celdaActual = '';
+    let dentroDeComillas = false;
+
+    for (let i = 0; i < texto.length; i++) {
+        const char = texto[i];
+        const nextChar = texto[i + 1];
+
+        if (char === '"' && dentroDeComillas && nextChar === '"') {
+            celdaActual += '"';
+            i++;
+        } else if (char === '"') {
+            dentroDeComillas = !dentroDeComillas;
+        } else if (char === ',' && !dentroDeComillas) {
+            filaActual.push(celdaActual);
+            celdaActual = '';
+        } else if ((char === '\r' || char === '\n') && !dentroDeComillas) {
+            if (celdaActual !== '' || filaActual.length > 0) {
+                filaActual.push(celdaActual);
+                filas.push(filaActual);
+                celdaActual = '';
+                filaActual = [];
+            }
+            if (char === '\r' && nextChar === '\n') i++;
+        } else {
+            celdaActual += char;
+        }
+    }
+    if (celdaActual !== '' || filaActual.length > 0) {
+        filaActual.push(celdaActual);
+        filas.push(filaActual);
+    }
+    return filas;
+}
+
 async function cargarSueños() {
     const contenedor = document.getElementById('contenedor-sueños');
     try {
         const respuesta = await fetch(csvURL + "&cache=" + new Date().getTime());
         const data = await respuesta.text();
-        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 2).slice(1);
+        const filas = parsearTodoElCSV(data).slice(1); // Quitamos cabecera
         
         contenedor.innerHTML = '';
         
-        filas.reverse().forEach(fila => {
-            // Lógica mejorada para capturar el sueño completo aunque tenga comas
-            const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            let sueñoLimpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
-            
-            if (sueñoLimpio && sueñoLimpio.trim() !== "") {
+        filas.reverse().forEach(col => {
+            let sueñoLimpio = col[1]?.trim();
+            if (sueñoLimpio) {
                 const div = document.createElement('div');
                 div.className = 'sueño';
                 div.innerText = sueñoLimpio;
