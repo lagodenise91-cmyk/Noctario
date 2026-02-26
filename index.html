@@ -2,260 +2,127 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Noctario - Archivo de Sueños</title>
+<title>Noctario — Archivo de sueños</title>
 
 <style>
 body {
-    background-color: white;
-    color: black;
-    font-family: 'Courier New', Courier, monospace;
     margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: monospace;
+}
+
+#inicio {
     display: flex;
-    flex-direction: column;
     height: 100vh;
-    overflow: hidden;
-}
-
-#top-nav {
-    position: absolute;
-    top: 30px;
-    right: 30px;
-    font-size: 28px;
-    cursor: pointer;
-    user-select: none;
-    z-index: 100;
-    line-height: 1;
-}
-
-#escritura {
-    display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
-    width: 100vw;
+    cursor: pointer;
+    text-align: center;
+}
+
+#app {
+    display: none;
+    padding: 40px;
 }
 
 textarea {
-    width: 80%;
-    max-width: 500px;
-    height: 120px;
-    border: 1px solid black;
-    padding: 20px;
-    font-family: 'Courier New';
-    font-size: 16px;
-    outline: none;
-    resize: none;
-    background: white;
-    line-height: 1.5;
+    width: 100%;
+    height: 220px;
+    background: #000;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 10px;
+    font-family: monospace;
 }
 
 button {
-    background: white;
-    border: 1px solid black;
-    padding: 8px 25px;
-    margin-top: 20px;
-    font-family: 'Courier New';
-    cursor: pointer;
-    font-size: 14px;
-    text-transform: lowercase;
-}
-
-button:hover {
-    background: black;
-    color: white;
-}
-
-#biblioteca {
-    display: none;
-    padding: 100px 20px;
-    overflow-y: auto;
-    height: 100%;
-}
-
-#centro-biblioteca {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-#buscador {
-    width: 100%;
+    background: #fff;
+    color: #000;
     border: none;
-    border-bottom: 1px solid black;
-    font-family: 'Times New Roman', serif;
-    font-size: 24px;
-    outline: none;
-    margin-bottom: 50px;
-    background: transparent;
+    padding: 8px 18px;
+    margin-top: 10px;
+    cursor: pointer;
 }
 
-.sueño {
-    font-family: 'Times New Roman', serif;
-    font-size: 19px;
-    line-height: 1.6;
-    margin-bottom: 40px;
-    border-bottom: 1px dotted #ccc;
-    padding-bottom: 20px;
+input {
+    background: #000;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 6px;
+}
+
+#resultados {
+    margin-top: 40px;
     white-space: pre-wrap;
-}
-
-#contador {
-    position: fixed;
-    bottom: 15px;
-    left: 15px;
-    font-size: 10px;
-    color: #999;
-    letter-spacing: 2px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="top-nav" onclick="toggleVista()">&#8942;</div>
-
-<div id="escritura">
-    <textarea id="input-sueño" placeholder="escribí acá tu sueño..."></textarea>
-    <button onclick="enviar()">enviar</button>
-</div>
-
-<div id="biblioteca">
-    <div id="centro-biblioteca">
-        <input type="text" id="buscador" placeholder="buscar palabra..." onkeyup="filtrar()">
-        <div id="contenedor-sueños"><p>abriendo archivo...</p></div>
+<div id="inicio" onclick="entrar()">
+    <div>
+        NOCTARIO<br>
+        archivo público de sueños<br><br>
+        click para entrar
     </div>
 </div>
 
-<div id="contador">VISITAS: 000000034</div>
+<div id="app">
+
+<textarea id="sueno" placeholder="escribí tu sueño..."></textarea><br>
+<button onclick="enviar()">enviar</button>
+
+<div style="margin-top:30px;">
+    buscar palabra:
+    <input id="busqueda">
+    <button onclick="filtrar()">buscar</button>
+</div>
+
+<div id="resultados"></div>
+
+</div>
 
 <script>
 
-// ===== CONFIGURACIÓN =====
-
-const csvURL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
-
-const formURL =
-"https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
-
-const entryID = "entry.550106680";
-
-
-// ===== CAMBIO DE VISTA =====
-
-function toggleVista() {
-
-    const esc = document.getElementById('escritura');
-    const bib = document.getElementById('biblioteca');
-    const nav = document.getElementById('top-nav');
-
-    if (bib.style.display === 'none' || bib.style.display === '') {
-        bib.style.display = 'block';
-        esc.style.display = 'none';
-        nav.innerText = '←';
-        cargarSueños();
-    } else {
-        bib.style.display = 'none';
-        esc.style.display = 'flex';
-        nav.innerHTML = '&#8942;';
-    }
+function entrar() {
+    document.getElementById("inicio").style.display = "none";
+    document.getElementById("app").style.display = "block";
 }
-
-
-// ===== CARGAR SUEÑOS =====
-
-async function cargarSueños() {
-
-    const contenedor = document.getElementById('contenedor-sueños');
-
-    try {
-
-        const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
-        const data = await respuesta.text();
-
-        const filas = data.split(/\r?\n/).slice(1);
-
-        contenedor.innerHTML = "";
-
-        filas.reverse().forEach(fila => {
-
-            const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            const limpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
-
-            if (limpio && limpio.trim() !== "") {
-
-                const div = document.createElement('div');
-                div.className = 'sueño';
-                div.innerText = limpio;
-                contenedor.appendChild(div);
-
-            }
-        });
-
-    } catch (error) {
-
-        contenedor.innerHTML = "<p>no se pudo cargar el archivo.</p>";
-
-    }
-}
-
-
-// ===== ENVIAR SUEÑO =====
 
 function enviar() {
 
-    const texto = document.getElementById('input-sueño').value;
-    if (!texto) return;
+    const texto = document.getElementById("sueno").value.trim();
 
-    const iframe = document.createElement('iframe');
-    iframe.name = 'hidden_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    if (!texto) {
+        alert("escribí algo");
+        return;
+    }
 
-    const form = document.createElement('form');
-    form.action = formURL;
-    form.method = 'POST';
-    form.target = 'hidden_iframe';
+    const url = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 
-    // Campo principal
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = entryID;
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = url;
+    form.target = "hidden_iframe";
+
+    const input = document.createElement("textarea");
+    input.name = "entry.1981831967";
     input.value = texto;
 
-    // Campos extra requeridos
-    const fvv = document.createElement('input');
-    fvv.type = 'hidden';
-    fvv.name = 'fvv';
-    fvv.value = '1';
-
-    const draft = document.createElement('input');
-    draft.type = 'hidden';
-    draft.name = 'draftResponse';
-    draft.value = '[]';
-
-    const pageHistory = document.createElement('input');
-    pageHistory.type = 'hidden';
-    pageHistory.name = 'pageHistory';
-    pageHistory.value = '0';
-
-    const submit = document.createElement('input');
-    submit.type = 'hidden';
-    submit.name = 'submit';
-    submit.value = 'Submit';
-
     form.appendChild(input);
-    form.appendChild(fvv);
-    form.appendChild(draft);
-    form.appendChild(pageHistory);
-    form.appendChild(submit);
-
     document.body.appendChild(form);
+
+    const iframe = document.createElement("iframe");
+    iframe.name = "hidden_iframe";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
     form.submit();
 
-    alert("el sueño ha sido entregado.");
-    document.getElementById('input-sueño').value = "";
+    document.getElementById("sueno").value = "";
+    alert("sueño enviado ✧");
 
     setTimeout(() => {
         document.body.removeChild(form);
@@ -263,21 +130,32 @@ function enviar() {
     }, 1000);
 }
 
+let base = [];
 
-// ===== FILTRAR =====
+fetch("suenos.csv")
+.then(r => r.text())
+.then(texto => {
+    base = texto.split("\n");
+    mostrar(base);
+});
+
+function mostrar(lista) {
+    const div = document.getElementById("resultados");
+    div.innerHTML = "";
+
+    lista.forEach(s => {
+        if (s.trim() !== "") {
+            const p = document.createElement("p");
+            p.textContent = s;
+            div.appendChild(p);
+        }
+    });
+}
 
 function filtrar() {
-
-    let input = document.getElementById('buscador').value.toLowerCase();
-    let sueños = document.getElementsByClassName('sueño');
-
-    for (let i = 0; i < sueños.length; i++) {
-
-        sueños[i].style.display =
-            sueños[i].innerText.toLowerCase().includes(input)
-            ? "block"
-            : "none";
-    }
+    const palabra = document.getElementById("busqueda").value.toLowerCase();
+    const filtrados = base.filter(s => s.toLowerCase().includes(palabra));
+    mostrar(filtrados);
 }
 
 </script>
