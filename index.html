@@ -172,7 +172,7 @@ button:hover {
     </div>
 </div>
 
-<div id="contador">VISITAS: 000000034</div>
+<div id="contador">VISITAS: 000000024</div>
 
 <script>
 const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
@@ -229,41 +229,52 @@ async function cargarSueños() {
 
 function enviar() {
     const texto = document.getElementById('input-sueño').value;
-    if (!texto) return;
+    if (!texto.trim()) return;
 
-    const iframe = document.createElement('iframe');
-    iframe.name = 'hidden_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    // 1. Crear iframe si no existe
+    let iframe = document.getElementsByName('hidden_iframe')[0];
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.name = 'hidden_iframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+    }
 
+    // 2. Crear el formulario
     const form = document.createElement('form');
     form.action = formURL;
     form.method = 'POST';
     form.target = 'hidden_iframe';
 
+    // 3. Campo del sueño
     const input = document.createElement('input');
     input.type = 'hidden';
     input.name = entryID;
     input.value = texto;
     form.appendChild(input);
 
-    // FIX: submit=Submit para Google Forms
-    const submitBtn = document.createElement('input');
-    submitBtn.type = 'hidden';
-    submitBtn.name = 'submit';
-    submitBtn.value = 'Submit';
-    form.appendChild(submitBtn);
+    // 4. Parámetro de envío (Cambiamos la forma de agregarlo para no romper form.submit)
+    const extra = document.createElement('input');
+    extra.type = 'hidden';
+    extra.name = 'partialResponse'; // Google acepta esto también
+    extra.value = '[null,null,null]';
+    form.appendChild(extra);
 
     document.body.appendChild(form);
-    form.submit();
 
-    alert("el sueño ha sido entregado.");
-    document.getElementById('input-sueño').value = "";
+    // 5. Intento de envío
+    try {
+        form.submit();
+        alert("el sueño ha sido entregado.");
+        document.getElementById('input-sueño').value = "";
+    } catch (e) {
+        console.error("Error al enviar", e);
+    }
 
+    // 6. Limpieza
     setTimeout(() => {
-        document.body.removeChild(form);
-        document.body.removeChild(iframe);
-    }, 500);
+        if (form.parentNode) document.body.removeChild(form);
+    }, 1000);
 }
 
 function filtrar() {
