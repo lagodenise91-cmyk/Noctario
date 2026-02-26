@@ -134,7 +134,7 @@ button:hover {
     border-bottom: 1px dotted #ccc;
     padding-bottom: 20px;
     white-space: pre-wrap;
-    display: none; /* Se activan con la búsqueda */
+    display: none; /* Ocultos hasta buscar */
 }
 
 #contador {
@@ -147,9 +147,8 @@ button:hover {
     text-transform: uppercase;
 }
 
-/* --- ESTILO DE LOS MENSAJES DE ESTADO --- */
-#sin-resultados, #instruccion-busqueda {
-    color: #ccc; /* Gris clarito */
+#sin-resultados {
+    color: #ccc;
     font-style: italic;
     font-family: 'Times New Roman', serif;
     margin-top: 20px;
@@ -177,9 +176,7 @@ button:hover {
 <div id="biblioteca">
     <div id="centro-biblioteca">
         <input type="text" id="buscador" placeholder="buscar palabra..." onkeyup="filtrar()">
-        <div id="contenedor-sueños">
-            <p id="instruccion-busqueda">el archivo está cerrado. busca una palabra para abrirlo...</p>
-        </div>
+        <div id="contenedor-sueños"></div>
     </div>
 </div>
 
@@ -238,9 +235,10 @@ async function cargarSueños() {
         const data = await respuesta.text();
         const filas = data.split(/\r?\n/).filter(line => line.trim().length > 2).slice(1);
         
-        contenedor.innerHTML = '<p id="instruccion-busqueda">el archivo está cerrado. busca una palabra para abrirlo...</p>';
+        contenedor.innerHTML = '';
         
         filas.reverse().forEach(fila => {
+            // Lógica mejorada para capturar el sueño completo aunque tenga comas
             const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
             let sueñoLimpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
             
@@ -259,19 +257,15 @@ async function cargarSueños() {
 function filtrar() {
     let input = document.getElementById('buscador').value.toLowerCase().trim();
     let sueños = document.getElementsByClassName('sueño');
-    let instruccion = document.getElementById('instruccion-busqueda');
     let encontrados = 0;
 
     let previo = document.getElementById('sin-resultados');
     if (previo) previo.remove();
 
     if (input === "") {
-        if (instruccion) instruccion.style.display = "block";
         for (let s of sueños) s.style.display = "none";
         return;
     }
-
-    if (instruccion) instruccion.style.display = "none";
 
     for (let s of sueños) {
         if (s.innerText.toLowerCase().includes(input)) {
