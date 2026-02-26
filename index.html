@@ -182,11 +182,10 @@ button:hover {
 <div id="contador">SUEÑOS REGISTRADOS: <span id="numero-visitas">000000000</span></div>
 
 <script>
-const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
+// ACTUALIZADO CON TU NUEVO LINK DE PUBLICACIÓN EN FORMATO CSV
+const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
 const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 const entryID = "entry.1116877069";
-
-// --- NAVEGACIÓN ---
 
 function entrar() {
     actualizarContadorReal(); 
@@ -214,54 +213,42 @@ function toggleVista() {
     }
 }
 
-// --- CONTADOR GLOBAL REAL ---
-
 async function actualizarContadorReal() {
     const display = document.getElementById('numero-visitas');
     try {
-        const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
+        const respuesta = await fetch(csvURL + "&cache=" + new Date().getTime());
         const data = await respuesta.text();
+        const filas = data.split(/\r?\n/).filter(line => line.trim() !== "");
         
-        // Separación robusta de líneas para Google Sheets
-        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 0);
-        
-        let total = filas.length - 1; // Descontamos encabezado
+        let total = filas.length - 1; 
         if (total < 0) total = 0;
-
         display.innerText = total.toString().padStart(9, '0');
     } catch (error) {
-        console.error("Error en contador:", error);
+        console.error("Error contador:", error);
     }
 }
 
-// --- ARCHIVO DE SUEÑOS Y BUSCADOR ---
-
 async function cargarSueños() {
     const contenedor = document.getElementById('contenedor-sueños');
-    contenedor.innerHTML = "<p>abriendo archivo...</p>";
-    
     try {
-        const respuesta = await fetch(csvURL + "&cb=" + new Date().getTime());
+        const respuesta = await fetch(csvURL + "&cache=" + new Date().getTime());
         const data = await respuesta.text();
+        const filas = data.split(/\r?\n/).filter(line => line.trim() !== "").slice(1);
         
-        const filas = data.split(/\r?\n/).filter(line => line.trim().length > 0);
-        const datosCuerpo = filas.slice(1);
-
-        if (datosCuerpo.length === 0) {
+        contenedor.innerHTML = "";
+        if (filas.length === 0) {
             contenedor.innerHTML = "<p>el archivo está vacío...</p>";
             return;
         }
 
-        contenedor.innerHTML = "";
-        datosCuerpo.reverse().forEach(fila => {
-            // Regex para separar por comas respetando el texto entre comillas
+        filas.reverse().forEach(fila => {
             const columnas = fila.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            let limpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
+            let sueñoLimpio = columnas[1]?.replace(/^"|"$/g, "").replace(/""/g, '"');
             
-            if (limpio && limpio.trim() !== "") {
+            if (sueñoLimpio && sueñoLimpio.trim() !== "") {
                 const div = document.createElement('div');
                 div.className = 'sueño';
-                div.innerText = limpio;
+                div.innerText = sueñoLimpio;
                 contenedor.appendChild(div);
             }
         });
@@ -278,37 +265,31 @@ function filtrar() {
     let previo = document.getElementById('sin-resultados');
     if (previo) previo.remove();
 
-    for (let i = 0; i < sueños.length; i++) {
-        const contenido = sueños[i].innerText.toLowerCase();
-        if (contenido.includes(input)) {
-            sueños[i].style.display = "block";
+    for (let s of sueños) {
+        if (s.innerText.toLowerCase().includes(input)) {
+            s.style.display = "block";
             encontrados++;
         } else {
-            sueños[i].style.display = "none";
+            s.style.display = "none";
         }
     }
 
     if (encontrados === 0 && input !== "") {
-        const mensaje = document.createElement('p');
-        mensaje.id = 'sin-resultados';
-        mensaje.innerText = 'no hay rastros de ese sueño...';
-        document.getElementById('contenedor-sueños').appendChild(mensaje);
+        const p = document.createElement('p');
+        p.id = 'sin-resultados';
+        p.innerText = 'no hay rastros de ese sueño...';
+        document.getElementById('contenedor-sueños').appendChild(p);
     }
 }
-
-// --- ENVÍO DE DATOS ---
 
 function enviar() {
     const texto = document.getElementById('input-sueño').value;
     if (!texto.trim()) return;
 
-    let iframe = document.getElementsByName('hidden_iframe')[0];
-    if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.name = 'hidden_iframe';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-    }
+    let iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
 
     const form = document.createElement('form');
     form.action = formURL;
@@ -321,28 +302,17 @@ function enviar() {
     input.value = texto;
     form.appendChild(input);
 
-    const extra = document.createElement('input');
-    extra.type = 'hidden';
-    extra.name = 'partialResponse';
-    extra.value = '[null,null,null]';
-    form.appendChild(extra);
-
     document.body.appendChild(form);
+    form.submit();
 
-    try {
-        form.submit();
-        alert("el sueño ha sido entregado.");
-        document.getElementById('input-sueño').value = "";
-        
-        // Actualizamos contador tras el envío (con delay para caché de Google)
-        setTimeout(actualizarContadorReal, 3000); 
-    } catch (e) {
-        console.error("Error envío", e);
-    }
-
+    alert("el sueño ha sido entregado.");
+    document.getElementById('input-sueño').value = "";
+    
     setTimeout(() => {
         if (form.parentNode) document.body.removeChild(form);
-    }, 1500);
+        if (iframe.parentNode) document.body.removeChild(iframe);
+        actualizarContadorReal();
+    }, 2000);
 }
 </script>
 
