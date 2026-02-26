@@ -74,31 +74,63 @@
         }
 
         function enviar() {
-            const texto = document.getElementById('input-sueño').value;
-            if(!texto) return;
+    const texto = document.getElementById('input-sueño').value;
+    if (!texto) return;
 
-            // MÉTODO DE ENVÍO POR FORMULARIO OCULTO (MÁS ROBUSTO)
-            const iframe = document.createElement('iframe');
-            iframe.name = 'hidden_iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
+    const iframe = document.createElement('iframe');
+    iframe.name = 'hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
 
-            const form = document.createElement('form');
-            form.action = formURL;
-            form.method = 'POST';
-            form.target = 'hidden_iframe';
+    const form = document.createElement('form');
+    form.action = formURL;
+    form.method = 'POST';
+    form.target = 'hidden_iframe';
 
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = entryID;
-            input.value = texto;
+    // Campo principal (tu sueño)
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = entryID;
+    input.value = texto;
 
-            form.appendChild(input);
-            document.body.appendChild(form);
-            form.submit();
+    // Campos extra necesarios para Google Forms
+    const fvv = document.createElement('input');
+    fvv.type = 'hidden';
+    fvv.name = 'fvv';
+    fvv.value = '1';
 
-            alert("el sueño ha sido entregado.");
-            document.getElementById('input-sueño').value = "";
+    const draft = document.createElement('input');
+    draft.type = 'hidden';
+    draft.name = 'draftResponse';
+    draft.value = '[]';
+
+    const pageHistory = document.createElement('input');
+    pageHistory.type = 'hidden';
+    pageHistory.name = 'pageHistory';
+    pageHistory.value = '0';
+
+    const submit = document.createElement('input');
+    submit.type = 'hidden';
+    submit.name = 'submit';
+    submit.value = 'Submit';
+
+    form.appendChild(input);
+    form.appendChild(fvv);
+    form.appendChild(draft);
+    form.appendChild(pageHistory);
+    form.appendChild(submit);
+
+    document.body.appendChild(form);
+    form.submit();
+
+    alert("el sueño ha sido entregado.");
+    document.getElementById('input-sueño').value = "";
+
+    setTimeout(() => {
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
+    }, 1000);
+}
             
             // Limpieza
             setTimeout(() => {
