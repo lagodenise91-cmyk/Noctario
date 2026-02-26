@@ -37,7 +37,7 @@ body {
 
 #inicio strong {
     font-weight: bold;
-    font-size: 1.4em; /* Un poco más grande para resaltar */
+    font-size: 1.4em;
     letter-spacing: 5px;
 }
 
@@ -175,12 +175,10 @@ button:hover {
 <div id="contador">VISITAS: 000000034</div>
 
 <script>
-// CONFIGURACIÓN DE GOOGLE SHEETS
 const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9mxN12Z9oWisGoaJIlpRM4BxJDC_NrkEvKykC6axWlm0yffKoC7N5WDc4DUN8BLgm0lEqyMpD2zvz/pub?gid=160434688&single=true&output=csv";
 const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSee-5mK3MjGQlEShw2ywKG_0pDg89ZzxaujpOdNGgm_7tzl0Q/formResponse";
 const entryID = "entry.550106680";
 
-// FUNCIÓN PARA ENTRAR
 function entrar() {
     const inicio = document.getElementById('inicio');
     inicio.style.opacity = '0';
@@ -189,7 +187,6 @@ function entrar() {
     }, 1000);
 }
 
-// CAMBIO DE VISTA (ESCRITURA / BIBLIOTECA)
 function toggleVista() {
     const esc = document.getElementById('escritura');
     const bib = document.getElementById('biblioteca');
@@ -207,7 +204,6 @@ function toggleVista() {
     }
 }
 
-// CARGAR SUEÑOS DESDE CSV
 async function cargarSueños() {
     const contenedor = document.getElementById('contenedor-sueños');
     try {
@@ -231,7 +227,6 @@ async function cargarSueños() {
     }
 }
 
-// ENVIAR SUEÑO
 function enviar() {
     const texto = document.getElementById('input-sueño').value;
     if (!texto) return;
@@ -250,8 +245,15 @@ function enviar() {
     input.type = 'hidden';
     input.name = entryID;
     input.value = texto;
-
     form.appendChild(input);
+
+    // FIX: submit=Submit para Google Forms
+    const submitBtn = document.createElement('input');
+    submitBtn.type = 'hidden';
+    submitBtn.name = 'submit';
+    submitBtn.value = 'Submit';
+    form.appendChild(submitBtn);
+
     document.body.appendChild(form);
     form.submit();
 
@@ -264,7 +266,6 @@ function enviar() {
     }, 500);
 }
 
-// FILTRO DE BÚSQUEDA
 function filtrar() {
     let input = document.getElementById('buscador').value.toLowerCase();
     let sueños = document.getElementsByClassName('sueño');
